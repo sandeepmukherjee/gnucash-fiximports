@@ -15,3 +15,5 @@ This script can search in the description or the memo fields.
 For best results, disable Bayesian matching.
 
 You must have python-bindings enabled.
+
+This is currently in beta state, testing feedback will be appreciated!
