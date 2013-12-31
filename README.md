@@ -12,5 +12,6 @@ with a description starting with "PIZZA" be categorized as "Expenses:Dining".
 To do this, you need to create a "rules" file first. See rules.txt for
 more information on the format.
 This script can search in the description or the memo fields.
+For best results, disable Bayesian matching.
 
 You must have python-bindings enabled.
