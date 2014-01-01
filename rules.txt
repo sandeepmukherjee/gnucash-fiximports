@@ -6,6 +6,6 @@
 # Format is a search pattern. Example:
 # Expenses:Dining PIZZA
 # Specifies that a transaction beginning with "PIZZA" sould go into the
-# "Expenses:Dining" account.
-# (Uncomment this line below to activate this rule)
+# "Expenses:Dining" account. Currently account names cannot have spaces in them.
+# (Uncomment the line below to activate this rule)
 #Expenses:Dining PIZZA
