@@ -35,7 +35,7 @@
 # more information on the format.
 # This script can search in the description or the memo fields.
 
-VERSION = "0.1Beta"
+VERSION = "0.2Beta"
 
 # python imports
 import argparse
@@ -72,8 +72,11 @@ def readrules(filename):
 			if result:
 				ac = result.group(1)
 				pattern = result.group(2)
+				compiled = re.compile(pattern) # Makesure RE is OK
 				rules.append(pattern)
 				rules.append(ac)
+			else:
+				print "Ignoring line: (incorrect format):", line
 	return rules
 
 def get_ac_from_str(str, rules, root_ac):
