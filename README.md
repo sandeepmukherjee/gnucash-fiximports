@@ -27,6 +27,6 @@ On Ubuntu you can simply install the Python bindings by:
 
 Running the script on the example GnuCash file:
 
-   ./fiximports.py 'Assets:Current Assets:Checking Account' examples/rules.txt examples/simple-checkbook.gnucash 
+    ./fiximports.py 'Assets:Current Assets:Checking Account' examples/rules.txt examples/simple-checkbook.gnucash 
 
 The above command line should apply the "pizza" and "salary" rule to the transactions in the checking account.
