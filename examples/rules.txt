@@ -1,0 +1,12 @@
+# This is a rules file for the fiximports script.
+# Lines beginning with a '#' are ignored. Blank lines are also ignored.
+# Each entry is in the format:
+# Account Pattern
+# Where Account is a colon(:) separated account path.
+# Format is a search pattern. Example:
+# Expenses:Dining PIZZA
+# Specifies that a transaction beginning with "PIZZA" sould go into the
+# "Expenses:Dining" account. Currently account names cannot have spaces in them.
+# (Uncomment the line below to activate this rule)
+Expenses:Dining PIZZA
+Income:Salary Salary

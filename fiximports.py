@@ -69,8 +69,8 @@ def readrules(filename):
     rules = []
     fp = open(filename, 'r')
     for line in fp:
-        # print line
-        if line[0] != "#" or re.match("^\s*#", line):
+        line = line.strip() 
+        if line and not line.startswith('#'):
             result = re.match(r"^(\S+)\s+(.+)", line)
             if result:
                 ac = result.group(1)
@@ -159,7 +159,7 @@ def main():
         if not args.silent:
             print trans_date, ":", trans_desc, "=>", acname
         # check if acname is "Imbalance-USD"
-        if imbalance_pattern.matches(acname):
+        if imbalance_pattern.match(acname):
             imbalance += 1
             search_str = trans_desc
             if args.use_memo:
