@@ -69,27 +69,24 @@ def readrules(filename):
     rules = []
     fp = open(filename, 'r')
     for line in fp:
-        line = line.strip() 
+        line = line.strip()
         if line and not line.startswith('#'):
             result = re.match(r"^(\S+)\s+(.+)", line)
             if result:
                 ac = result.group(1)
                 pattern = result.group(2)
-                re.compile(pattern)  # Makesure RE is OK
-                rules.append(pattern)
-                rules.append(ac)
+                compiled = re.compile(pattern)  # Makesure RE is OK
+                rules.append((compiled, ac))
             else:
                 print "Ignoring line: (incorrect format):", line
     return rules
 
 
 def get_ac_from_str(str, rules, root_ac):
-    rlen = len(rules)
-    for i in range(0, rlen, 2):
-        if re.search(rules[i], str):
-            acpath = rules[i + 1]
+    for pattern, acpath in rules:
+        if pattern.search(str):
             acplist = re.split(':', acpath)
-            # print str, "matches", rules[i]
+            # print str, "matches", pattern
             newac = account_from_path(root_ac, acplist)
             return newac
     # print str, "does not match anything"
@@ -154,22 +151,23 @@ def main():
         trans_date = date.fromtimestamp(trans.GetDate())
         trans_desc = trans.GetDescription()
         trans_memo = trans.GetNotes()
-        ac = splits[0].GetAccount()
-        acname = ac.GetName()
-        if not args.silent:
-            print trans_date, ":", trans_desc, "=>", acname
-        # check if acname is "Imbalance-USD"
-        if imbalance_pattern.match(acname):
-            imbalance += 1
-            search_str = trans_desc
-            if args.use_memo:
-                search_str = trans_memo
-            newac = get_ac_from_str(search_str, rules, root_account)
-            if newac != "":
-                if not args.silent:
-                    print "\t Changing account to: ", newac.GetName()
-                splits[0].SetAccount(newac)
-                fixed += 1
+        for split in splits:
+            ac = split.GetAccount()
+            acname = ac.GetName()
+            if not args.silent:
+                print trans_date, ":", trans_desc, "=>", acname
+            # check if acname is "Imbalance-USD"
+            if imbalance_pattern.match(acname):
+                imbalance += 1
+                search_str = trans_desc
+                if args.use_memo:
+                    search_str = trans_memo
+                newac = get_ac_from_str(search_str, rules, root_account)
+                if newac != "":
+                    if not args.silent:
+                        print "\t Changing account to: ", newac.GetName()
+                    split.SetAccount(newac)
+                    fixed += 1
 
     if not args.nochange:
         gnucash_session.save()
