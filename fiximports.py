@@ -101,8 +101,8 @@ def get_ac_from_str(str, rules, root_ac):
 
 def parse_cmdline():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--imbalance-ac', default="Imbalance-USD",
-                        help="Imbalance account name. Default=Imbalance-USD")
+    parser.add_argument('-i', '--imbalance-ac', default="Imbalance-[A-Z]{3}",
+                        help="Imbalance account name pattern. Default=Imbalance-[A-Z]{3}")
     parser.add_argument('-v', '--version', action='store_true',
                         help="Display version and exit.")
     parser.add_argument('-m', '--use_memo', action='store_true',
@@ -142,6 +142,8 @@ def main():
     root_account = gnucash_session.book.get_root_account()
     orig_account = account_from_path(root_account, account_path)
 
+    imbalance_pattern = re.compile(args.imbalance_ac)
+
     total = 0
     imbalance = 0
     fixed = 0
@@ -157,7 +159,7 @@ def main():
         if not args.silent:
             print trans_date, ":", trans_desc, "=>", acname
         # check if acname is "Imbalance-USD"
-        if acname == args.imbalance_ac:
+        if imbalance_pattern.matches(acname):
             imbalance += 1
             search_str = trans_desc
             if args.use_memo:
