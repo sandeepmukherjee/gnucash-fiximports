@@ -17,3 +17,20 @@ For best results, disable Bayesian matching.
 You must have python-bindings enabled.
 
 This is currently in beta state, testing feedback will be appreciated!
+
+Getting started
+---------------
+
+On Ubuntu you can simply install the Python bindings by:
+
+    sudo apt-get install python-gnucash
+
+Running the script on the example GnuCash file:
+
+    ./fiximports.py -v 'Assets:Current Assets:Checking Account' examples/rules.txt examples/simple-checkbook.gnucash 
+
+The above command line should apply the "pizza" and "salary" rule to the transactions in the checking account.
+
+Run the script with "--help" to see all command line options:
+
+    ./fiximports.py --help
