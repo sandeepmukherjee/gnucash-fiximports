@@ -35,7 +35,7 @@
 # more information on the format.
 # This script can search in the description or the memo fields.
 
-VERSION = "0.2Beta"
+VERSION = "0.3Beta"
 
 # python imports
 import argparse
