@@ -35,7 +35,7 @@
 # more information on the format.
 # This script can search in the description or the memo fields.
 
-VERSION = "0.2Beta"
+VERSION = "0.3Beta"
 
 # python imports
 import argparse
@@ -147,41 +147,47 @@ def main():
     account_path = re.split(':', args.ac2fix)
 
     gnucash_session = Session(args.gnucash_file, is_new=False)
-    root_account = gnucash_session.book.get_root_account()
-    orig_account = account_from_path(root_account, account_path)
-
-    imbalance_pattern = re.compile(args.imbalance_ac)
-
     total = 0
     imbalance = 0
     fixed = 0
-    for split in orig_account.GetSplitList():
-        total += 1
-        trans = split.parent
-        splits = trans.GetSplitList()
-        trans_date = date.fromtimestamp(trans.GetDate())
-        trans_desc = trans.GetDescription()
-        trans_memo = trans.GetNotes()
-        for split in splits:
-            ac = split.GetAccount()
-            acname = ac.GetName()
-            logging.debug('%s: %s => %s', trans_date, trans_desc, acname)
-            if imbalance_pattern.match(acname):
-                imbalance += 1
-                search_str = trans_desc
-                if args.use_memo:
-                    search_str = trans_memo
-                newac = get_ac_from_str(search_str, rules, root_account)
-                if newac != "":
-                    logging.info('Changing account to: %s', newac.GetName())
-                    split.SetAccount(newac)
-                    fixed += 1
+    try:
+        root_account = gnucash_session.book.get_root_account()
+        orig_account = account_from_path(root_account, account_path)
 
-    if not args.nochange:
-        gnucash_session.save()
+        imbalance_pattern = re.compile(args.imbalance_ac)
+
+        for split in orig_account.GetSplitList():
+            total += 1
+            trans = split.parent
+            splits = trans.GetSplitList()
+            trans_date = date.fromtimestamp(trans.GetDate())
+            trans_desc = trans.GetDescription()
+            trans_memo = trans.GetNotes()
+            for split in splits:
+                ac = split.GetAccount()
+                acname = ac.GetName()
+                logging.debug('%s: %s => %s', trans_date, trans_desc, acname)
+                if imbalance_pattern.match(acname):
+                    imbalance += 1
+                    search_str = trans_desc
+                    if args.use_memo:
+                        search_str = trans_memo
+                    newac = get_ac_from_str(search_str, rules, root_account)
+                    if newac != "":
+                        logging.debug('\tChanging account to: %s', newac.GetName())
+                        split.SetAccount(newac)
+                        fixed += 1
+
+        if not args.nochange:
+            gnucash_session.save()
+
+        logging.info('Total splits=%s, imbalance=%s, fixed=%s', total, imbalance, fixed)
+
+    except Exception as ex:
+        logging.error(ex) 
+
     gnucash_session.end()
 
-    logging.info('Total splits=%s, imbalance=%s, fixed=%s', total, imbalance, fixed)
 
 
 if __name__ == "__main__":
