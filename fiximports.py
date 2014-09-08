@@ -42,6 +42,7 @@ import argparse
 import logging
 from datetime import date
 import re
+import sys,traceback
 
 # gnucash imports
 from gnucash import Session
@@ -52,9 +53,9 @@ def account_from_path(top_account, account_path, original_path=None):
         original_path = account_path
     account, account_path = account_path[0], account_path[1:]
     account = top_account.lookup_by_name(account)
-    if account.get_instance() is None:
+    if account is None or account.get_instance() is None:
         raise Exception(
-            "path " + ''.join(original_path) + " could not be found")
+            "A/C path " + ''.join(original_path) + " could not be found")
     if len(account_path) > 0:
         return account_from_path(account, account_path, original_path)
     else:
