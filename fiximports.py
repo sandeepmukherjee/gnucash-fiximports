@@ -73,14 +73,26 @@ def readrules(filename):
         for line in fd:
             line = line.strip()
             if line and not line.startswith('#'):
-                result = re.match(r"^(\S+)\s+(.+)", line)
-                if result:
-                    ac = result.group(1)
-                    pattern = result.group(2)
-                    compiled = re.compile(pattern)  # Makesure RE is OK
-                    rules.append((compiled, ac))
-                else:
-                    logging.warn('Ignoring line: (incorrect format): "%s"', line)
+                if line.startswith('"'):
+                    logging.debug('Using "-escpaped account in rule')
+                    result = re.match(r"^\"([^\"]+)\"\s+(.+)", line)
+                    if result:
+                        ac = result.group(1)
+                        pattern = result.group(2)
+                        compiled = re.compile(pattern)  # Makesure RE is OK
+                        rules.append((compiled, ac))
+                        logging.debug('Found account %s and rule %s' % ( ac, pattern ) )
+                    else:
+                        logging.warn('Ignoring line: (incorrect format): "%s"', line)
+                else:                       	       
+                    result = re.match(r"^(\S+)\s+(.+)", line)
+                    if result:
+                        ac = result.group(1)
+                        pattern = result.group(2)
+                        compiled = re.compile(pattern)  # Makesure RE is OK
+                        rules.append((compiled, ac))
+                    else:
+                        logging.warn('Ignoring line: (incorrect format): "%s"', line)
     return rules
 
 
