@@ -39,6 +39,7 @@ VERSION = "0.3Beta"
 
 # python imports
 import argparse
+import configparser
 import logging
 from datetime import date
 import re
@@ -61,27 +62,23 @@ def account_from_path(top_account, account_path, original_path=None):
         return account
 
 
-def readrules(filename):
-    '''Read the rules file.
+def readconfig(filename):
+    '''Read rules file from ConfigParser
     Populate an list with results. The list contents are:
     ([pattern], [account name]), ([pattern], [account name]) ...
     Note, this is in reverse order from the file.
     '''
     rules = []
-    with open(filename, 'r') as fd:
-        for line in fd:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                result = re.match(r"^(\S+)\s+(.+)", line)
-                if result:
-                    ac = result.group(1)
-                    pattern = result.group(2)
-                    compiled = re.compile(pattern)  # Makesure RE is OK
-                    rules.append((compiled, ac))
-                else:
-                    logging.warn('Ignoring line: (incorrect format): "%s"', line)
+    config = configparser.ConfigParser(delimiters="=")
+    config.optionxform = lambda option: option
+    config.read(filename)
+    ruleslist = config['Rules']
+    for rule in config['Rules']:
+        ac = str(rule)
+        pattern = config['Rules'][rule]
+        compiled = re.compile(pattern)  # Makesure RE is OK
+        rules.append((compiled, ac))
     return rules
-
 
 def get_ac_from_str(str, rules, root_ac):
     for pattern, acpath in rules:
@@ -143,7 +140,7 @@ def main():
         loglevel = logging.INFO
     logging.basicConfig(level=loglevel)
 
-    rules = readrules(args.rulesfile)
+    rules = readconfig(args.rulesfile)
     account_path = re.split(':', args.ac2fix)
 
     gnucash_session = Session(args.gnucash_file, is_new=False)
