@@ -69,7 +69,7 @@ def readconfig(filename):
     Note, this is in reverse order from the file.
     '''
     rules = []
-    config = configparser.ConfigParser(delimiters="=")
+    config = configparser.ConfigParser(delimiters="=",strict=False)
     config.optionxform = lambda option: option
     config.read(filename)
     ruleslist = config['Rules']
