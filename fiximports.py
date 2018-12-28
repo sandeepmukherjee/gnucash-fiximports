@@ -145,7 +145,7 @@ def parse_cmdline():
 def main():
     args = parse_cmdline()
     if args.version:
-        print VERSION
+        print(VERSION)
         exit(0)
 
     if args.verbose:
@@ -173,7 +173,7 @@ def main():
             total += 1
             trans = split.parent
             splits = trans.GetSplitList()
-            trans_date = date.fromtimestamp(trans.GetDate())
+            trans_date = trans.GetDate().date()
             trans_desc = trans.GetDescription()
             trans_memo = trans.GetNotes()
             for split in splits:
