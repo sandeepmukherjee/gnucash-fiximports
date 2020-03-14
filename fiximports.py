@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # fiximports.py -- Categorize imported transactions according to user-defined
 #                  rules.
@@ -35,7 +35,7 @@
 # more information on the format.
 # This script can search in the description or the memo fields.
 
-VERSION = "0.3Beta"
+VERSION = "0.4Beta"
 
 # python imports
 import argparse
@@ -64,7 +64,7 @@ def account_from_path(top_account, account_path, original_path=None):
 
 def readrules(filename):
     '''Read the rules file.
-    Populate an list with results. The list contents are:
+    Populate a list with results. The list contents are:
     ([pattern], [account name]), ([pattern], [account name]) ...
     Note, this is in reverse order from the file.
     '''
@@ -81,9 +81,11 @@ def readrules(filename):
                         pattern = result.group(2)
                         compiled = re.compile(pattern)  # Makesure RE is OK
                         rules.append((compiled, ac))
-                        logging.debug('Found account %s and rule %s' % ( ac, pattern ) )
+                        logging.debug('Found account %s and rule %s' %
+                                      ( ac, pattern ) )
                     else:
-                        logging.warn('Ignoring line: (incorrect format): "%s"', line)
+                        logging.warn('Ignoring line: (incorrect format): "%s"',
+                                     line)
                 else:                       	       
                     result = re.match(r"^(\S+)\s+(.+)", line)
                     if result:
@@ -92,7 +94,8 @@ def readrules(filename):
                         compiled = re.compile(pattern)  # Makesure RE is OK
                         rules.append((compiled, ac))
                     else:
-                        logging.warn('Ignoring line: (incorrect format): "%s"', line)
+                        logging.warn('Ignoring line: (incorrect format): "%s"',
+                                     line)
     return rules
 
 
@@ -111,6 +114,8 @@ def get_ac_from_str(str, rules, root_ac):
 
 def parse_cmdline():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--confirm', action='store_true',
+                        help="Ask for confirmation before each fix.")
     parser.add_argument('-i', '--imbalance-ac', default="Imbalance-[A-Z]{3}",
                         help="Imbalance account name pattern. Default=Imbalance-[A-Z]{3}")
     parser.add_argument('--version', action='store_true',
@@ -141,6 +146,18 @@ def parse_cmdline():
 #     4.3: If there is a matching account, set the account in the split.
 # 5. Print stats and save the session (if needed).
 
+# ANSI color codes for easier/faster visual confirmation
+# just print or concatenate them before the text you want colored
+bold = "\033[1m"
+red = "\033[91m"
+green = "\033[92m"
+yellow = "\033[93m"
+lightpurple = "\033[94m"
+purple = "\033[95m"
+cyan = "\033[96m"
+lightgray = "\033[97m"
+black = "\033[98m"
+end = "\033[00m" # stops colored printing, print or concatenate to the end
 
 def main():
     args = parse_cmdline()
@@ -163,6 +180,7 @@ def main():
     total = 0
     imbalance = 0
     fixed = 0
+    confirmed = None
     try:
         root_account = gnucash_session.book.get_root_account()
         orig_account = account_from_path(root_account, account_path)
@@ -179,6 +197,13 @@ def main():
             for split in splits:
                 ac = split.GetAccount()
                 acname = ac.GetName()
+                amount = eval(str(split.GetAmount()))
+                # "Debit balance accounts" are represented with a negative sign
+                # internally, so the amounts need their signs flipped.
+                # Refer to section 2.1.3 Debits and Credits in the GnuCash docs,
+                # the rearranged accounting equation to see why.
+                if account_path[0] in ('Assets', 'Expenses'):
+                    amount = -amount
                 logging.debug('%s: %s => %s', trans_date, trans_desc, acname)
                 if imbalance_pattern.match(acname):
                     imbalance += 1
@@ -187,14 +212,38 @@ def main():
                         search_str = trans_memo
                     newac = get_ac_from_str(search_str, rules, root_account)
                     if newac != "":
-                        logging.debug('\tChanging account to: %s', newac.GetName())
+                        if args.confirm:
+                            print(bold + green + '\nFound a match!\n' + end +
+                                  '{}: "{}" = {:.2f}\nFix account "{}" to "{}"?'
+                                  .format(trans_date,
+                                          cyan + trans_desc + end,
+                                          amount,
+                                          acname,
+                                          cyan + newac.GetName() + end))
+                            if confirmed != 'all':
+                                confirmed = input("Press ENTER to fix, "
+                                                  "'all' to fix all remaining, "
+                                                  "'s' to skip, 'q' to quit: "
+                                                 ).lower().strip()
+                            if confirmed == 'q':
+                                print("Quitting...")
+                                gnucash_session.end()
+                                sys.exit()
+                            elif confirmed not in ('', 'all'):
+                                # If not ENTER, 'y', or 'all', then skip!
+                                print("Skipping...")
+                                continue
+                            print("Fixing...")
+                        logging.debug('\tChanging account to: %s',
+                                      newac.GetName())
                         split.SetAccount(newac)
                         fixed += 1
 
         if not args.nochange:
             gnucash_session.save()
 
-        logging.info('Total splits=%s, imbalance=%s, fixed=%s', total, imbalance, fixed)
+        logging.info('Total splits=%s, imbalance=%s, fixed=%s',
+                     total, imbalance, fixed)
 
     except Exception as ex:
         logging.error(ex) 
