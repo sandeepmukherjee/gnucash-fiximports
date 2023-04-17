@@ -226,7 +226,7 @@ def main():
                                                   "'abort': "
                                                  ).lower().strip()
                             if confirmed == 'abort':
-                                print("Aborting...  " + bold(red("All fixes in "
+                                print("\nAborting...  " + bold(red("All fixes in "
                                       "this session have been discarded!")))
                                 gnucash_session.end()
                                 sys.exit()
@@ -240,13 +240,16 @@ def main():
                         split.SetAccount(newac)
                         fixed += 1
 
-        if not args.confirm or input(red("\nSave all the above changes to file? [y/N] ")).lower().startswith('y'):
+        if not args.confirm or input(red("\nSave all the above fixes to file? [y/N] ")).lower().startswith('y'):
             confirmed = True
         else:
             confirmed = False
 
         if not args.nochange and confirmed:
             gnucash_session.save()
+            print("Session saved.\n")
+        else:
+            print("Session not saved, all fixes from this session have been discarded.\n")
 
         logging.info('Total splits=%s, imbalance=%s, fixed=%s',
                      total, imbalance, fixed)
