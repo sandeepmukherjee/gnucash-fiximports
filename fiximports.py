@@ -48,6 +48,19 @@ import sys,traceback
 from gnucash import Session
 
 
+# ANSI color codes for easier/faster visual confirmation
+# bold and colors can be combined
+def bold(text): return "\033[1m{}\033[00m".format(text)
+def red(text): return "\033[91m{}\033[00m".format(text)
+def green(text): return "\033[92m{}\033[00m".format(text)
+def yellow(text): return "\033[93m{}\033[00m".format(text)
+def lightpurple(text): return "\033[94m{}\033[00m".format(text)
+def purple(text): return "\033[95m{}\033[00m".format(text)
+def cyan(text): return "\033[96m{}\033[00m".format(text)
+def lightgray(text): return "\033[97m{}\033[00m".format(text)
+def black(text): return "\033[98m{}\033[00m".format(text)
+
+
 def account_from_path(top_account, account_path, original_path=None):
     if original_path is None:
         original_path = account_path
@@ -86,7 +99,7 @@ def readrules(filename):
                     else:
                         logging.warn('Ignoring line: (incorrect format): "%s"',
                                      line)
-                else:                       	       
+                else:
                     result = re.match(r"^(\S+)\s+(.+)", line)
                     if result:
                         ac = result.group(1)
@@ -146,19 +159,6 @@ def parse_cmdline():
 #     4.3: If there is a matching account, set the account in the split.
 # 5. Print stats and save the session (if needed).
 
-# ANSI color codes for easier/faster visual confirmation
-# just print or concatenate them before the text you want colored
-bold = "\033[1m"
-red = "\033[91m"
-green = "\033[92m"
-yellow = "\033[93m"
-lightpurple = "\033[94m"
-purple = "\033[95m"
-cyan = "\033[96m"
-lightgray = "\033[97m"
-black = "\033[98m"
-end = "\033[00m" # stops colored printing, print or concatenate to the end
-
 def main():
     args = parse_cmdline()
     if args.version:
@@ -176,7 +176,7 @@ def main():
     rules = readrules(args.rulesfile)
     account_path = re.split(':', args.ac2fix)
 
-    gnucash_session = Session(args.gnucash_file, is_new=False)
+    gnucash_session = Session(args.gnucash_file)
     total = 0
     imbalance = 0
     fixed = 0
@@ -213,24 +213,25 @@ def main():
                     newac = get_ac_from_str(search_str, rules, root_account)
                     if newac != "":
                         if args.confirm:
-                            print(bold + green + '\nFound a match!\n' + end +
+                            print(green('\nFound a match!\n') +
                                   '{}: "{}" = {:.2f}\nFix account "{}" to "{}"?'
-                                  .format(trans_date,
-                                          cyan + trans_desc + end,
-                                          amount,
-                                          acname,
-                                          cyan + newac.GetName() + end))
-                            if confirmed != 'all':
+                                  .format(trans_date, bold(cyan(trans_desc)),
+                                          amount, acname,
+                                          bold(cyan(newac.GetName()))))
+                            if confirmed not in ('fix all', 'skip all'):
                                 confirmed = input("Press ENTER to fix, "
-                                                  "'all' to fix all remaining, "
-                                                  "'s' to skip, 'q' to quit: "
+                                                  "'s' to skip, "
+                                                  "'fix all', "
+                                                  "'skip all', "
+                                                  "'abort': "
                                                  ).lower().strip()
-                            if confirmed == 'q':
-                                print("Quitting...")
+                            if confirmed == 'abort':
+                                print("Aborting...  " + bold(red("All fixes in "
+                                      "this session have been discarded!")))
                                 gnucash_session.end()
                                 sys.exit()
-                            elif confirmed not in ('', 'all'):
-                                # If not ENTER, 'y', or 'all', then skip!
+                            elif confirmed not in ('', 'fix all'):
+                                # If not ENTER, 'y', or 'fix all', then skip!
                                 print("Skipping...")
                                 continue
                             print("Fixing...")
@@ -239,7 +240,12 @@ def main():
                         split.SetAccount(newac)
                         fixed += 1
 
-        if not args.nochange:
+        if not args.confirm or input(red("\nSave all the above changes to file? [y/N] ")).lower().startswith('y'):
+            confirmed = True
+        else:
+            confirmed = False
+
+        if not args.nochange and confirmed:
             gnucash_session.save()
 
         logging.info('Total splits=%s, imbalance=%s, fixed=%s',
