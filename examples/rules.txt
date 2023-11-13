@@ -5,8 +5,10 @@
 # Where Account is a colon(:) separated account path.
 # Format is a search pattern. Example:
 # Expenses:Dining PIZZA
-# Specifies that a transaction beginning with "PIZZA" sould go into the
-# "Expenses:Dining" account. Currently account names cannot have spaces in them.
-# (Uncomment the line below to activate this rule)
+# Specifies that a transaction beginning with "PIZZA" should go into the
+# "Expenses:Dining" account. Account names with spaces need double quotes
+# around the entire account path, e.g. "Expenses:Meals and Entertainment"
+# Make sure the account exists in your GnuCash file before using it here.
+#"Expenses:Meals and Entertainment" PIZZA
 Expenses:Dining PIZZA
 Income:Salary Salary

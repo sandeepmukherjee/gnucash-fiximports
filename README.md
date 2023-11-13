@@ -23,7 +23,7 @@ Getting started
 
 On Ubuntu you can simply install the Python bindings by:
 
-    sudo apt-get install python-gnucash
+    sudo apt-get install python3-gnucash
 
 Running the script on the example GnuCash file:
 
